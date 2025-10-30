@@ -150,6 +150,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Description: gui.Tr.ViewLogs,
 		},
 		{
+			ViewName:    "project",
+			Key:         'N',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleNukeDocker,
+			Description: gui.Tr.NukeDocker,
+		},
+		{
 			ViewName: "menu",
 			Key:      gocui.KeyEsc,
 			Modifier: gocui.ModNone,

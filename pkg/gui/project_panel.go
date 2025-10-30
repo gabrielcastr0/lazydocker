@@ -180,3 +180,33 @@ func (gui *Gui) handleViewAllLogs(g *gocui.Gui, v *gocui.View) error {
 
 	return gui.runSubprocess(c)
 }
+
+// handleNukeDocker removes all Docker resources after double confirmation
+func (gui *Gui) handleNukeDocker(g *gocui.Gui, v *gocui.View) error {
+	// First confirmation
+	return gui.createConfirmationPanel(
+		gui.Tr.Confirm,
+		gui.Tr.ConfirmNukeFirstWarning,
+		func(g *gocui.Gui, v *gocui.View) error {
+			// Second confirmation (extra safety)
+			return gui.createConfirmationPanel(
+				gui.Tr.Confirm,
+				gui.Tr.ConfirmNukeSecondWarning,
+				func(g *gocui.Gui, v *gocui.View) error {
+					return gui.WithWaitingStatus(gui.Tr.NukingStatus, func() error {
+						if err := gui.DockerCommand.NukeDocker(); err != nil {
+							return gui.createErrorPanel(err.Error())
+						}
+
+						// Refresh all panels after nuke
+						gui.refresh()
+
+						return nil
+					})
+				},
+				nil,
+			)
+		},
+		nil,
+	)
+}

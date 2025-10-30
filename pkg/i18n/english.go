@@ -96,6 +96,10 @@ type TranslationSet struct {
 	ConfirmPruneImages          string
 	ConfirmPruneVolumes         string
 	ConfirmPruneNetworks        string
+	NukeDocker                  string
+	ConfirmNukeFirstWarning     string
+	ConfirmNukeSecondWarning    string
+	NukingStatus                string
 	PruningStatus               string
 	StopService                 string
 	PressEnterToReturn          string
@@ -259,6 +263,10 @@ func englishSet() TranslationSet {
 		ConfirmRemoveContainers:     "Are you sure you want to remove all containers?",
 		ConfirmPruneVolumes:         "Are you sure you want to prune all unused volumes?",
 		ConfirmPruneNetworks:        "Are you sure you want to prune all unused networks?",
+		NukeDocker:                  "NUKE: Remove ALL Docker resources",
+		ConfirmNukeFirstWarning:     "WARNING: This will remove ALL containers, images, volumes, and networks!\n\nThis action CANNOT be undone. All data will be permanently lost.\n\nAre you ABSOLUTELY sure?",
+		ConfirmNukeSecondWarning:    "FINAL WARNING: This is your last chance to cancel.\n\nPress 'y' to permanently delete:\n- All containers (running and stopped)\n- All images\n- All volumes\n- All networks (except bridge, host, none)\n\nProceed with nuclear option?",
+		NukingStatus:                "nuking Docker environment...",
 		StopService:                 "Are you sure you want to stop this service's containers?",
 		StopContainer:               "Are you sure you want to stop this container?",
 		PressEnterToReturn:          "Press enter to return to lazydocker (this prompt can be disabled in your config by setting `gui.returnImmediately: true`)",

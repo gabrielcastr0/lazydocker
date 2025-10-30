@@ -514,6 +514,12 @@ func (gui *Gui) handleContainersBulkCommand(g *gocui.Gui, v *gocui.View) error {
 			Name:             gui.Tr.PruneContainers,
 			InternalFunction: gui.handlePruneContainers,
 		},
+		{
+			Name: gui.Tr.NukeDocker,
+			InternalFunction: func() error {
+				return gui.handleNukeDocker(gui.g, gui.g.CurrentView())
+			},
+		},
 	}
 
 	bulkCommands := append(baseBulkCommands, gui.Config.UserConfig.BulkCommands.Containers...)

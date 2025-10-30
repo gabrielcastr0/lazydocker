@@ -16,7 +16,10 @@ import (
 	cliconfig "github.com/docker/cli/cli/config"
 	ddocker "github.com/docker/cli/cli/context/docker"
 	ctxstore "github.com/docker/cli/cli/context/store"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/imdario/mergo"
 	"github.com/jesseduffield/lazydocker/pkg/commands/ssh"
@@ -419,4 +422,95 @@ func determineDockerHost() (string, error) {
 	// ```
 	// In such scenario, we mimic the `docker` cli and try to connect to the "default docker host".
 	return defaultDockerHost, nil
+}
+
+// NukeDocker removes all Docker resources (containers, images, volumes, networks)
+// This is a destructive operation that should only be called after user confirmation
+func (c *DockerCommand) NukeDocker() error {
+	var errs []error
+
+	// 1. Stop and remove all containers (including running ones)
+	containers, err := c.Client.ContainerList(context.Background(), container.ListOptions{All: true})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to list containers: %w", err))
+	} else {
+		for _, ctr := range containers {
+			// Stop running containers first
+			if ctr.State == "running" {
+				c.Log.Infof("Stopping container %s", ctr.ID)
+				if err := c.Client.ContainerStop(context.Background(), ctr.ID, container.StopOptions{}); err != nil {
+					c.Log.Warnf("Failed to stop container %s: %v", ctr.ID, err)
+				}
+			}
+
+			// Remove container
+			c.Log.Infof("Removing container %s", ctr.ID)
+			if err := c.Client.ContainerRemove(context.Background(), ctr.ID, container.RemoveOptions{
+				Force:         true,
+				RemoveVolumes: false, // Don't remove named volumes here
+			}); err != nil {
+				errs = append(errs, fmt.Errorf("failed to remove container %s: %w", ctr.ID, err))
+			}
+		}
+	}
+
+	// 2. Remove all images
+	images, err := c.Client.ImageList(context.Background(), image.ListOptions{})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to list images: %w", err))
+	} else {
+		for _, img := range images {
+			c.Log.Infof("Removing image %s", img.ID)
+			if _, err := c.Client.ImageRemove(context.Background(), img.ID, image.RemoveOptions{
+				Force:         true,
+				PruneChildren: true,
+			}); err != nil {
+				c.Log.Warnf("Failed to remove image %s: %v", img.ID, err)
+				// Don't add to errs - some images may be in use temporarily
+			}
+		}
+	}
+
+	// 3. Remove all volumes
+	volumeList, err := c.Client.VolumeList(context.Background(), volume.ListOptions{})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to list volumes: %w", err))
+	} else {
+		for _, vol := range volumeList.Volumes {
+			c.Log.Infof("Removing volume %s", vol.Name)
+			if err := c.Client.VolumeRemove(context.Background(), vol.Name, true); err != nil {
+				c.Log.Warnf("Failed to remove volume %s: %v", vol.Name, err)
+			}
+		}
+	}
+
+	// 4. Remove all networks (except default ones: bridge, host, none)
+	networks, err := c.Client.NetworkList(context.Background(), types.NetworkListOptions{})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to list networks: %w", err))
+	} else {
+		defaultNetworks := map[string]bool{
+			"bridge": true,
+			"host":   true,
+			"none":   true,
+		}
+
+		for _, nw := range networks {
+			if defaultNetworks[nw.Name] {
+				c.Log.Infof("Skipping default network %s", nw.Name)
+				continue
+			}
+
+			c.Log.Infof("Removing network %s", nw.Name)
+			if err := c.Client.NetworkRemove(context.Background(), nw.ID); err != nil {
+				c.Log.Warnf("Failed to remove network %s: %v", nw.Name, err)
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("nuke completed with %d errors: %v", len(errs), errs)
+	}
+
+	return nil
 }
