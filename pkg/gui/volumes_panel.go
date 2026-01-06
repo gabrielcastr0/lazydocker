@@ -49,7 +49,10 @@ func (gui *Gui) getVolumesPanel() *panels.SideListPanel[*commands.Volume] {
 			}
 			return a.Name < b.Name
 		},
-		GetTableCells: presentation.GetVolumeDisplayStrings,
+		GetTableCells: func(volume *commands.Volume) []string {
+			isSelected := gui.State.MultiSelect.Volumes[volume.Name]
+			return presentation.GetVolumeDisplayStrings(volume, isSelected)
+		},
 	}
 }
 

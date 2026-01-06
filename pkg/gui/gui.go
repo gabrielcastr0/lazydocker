@@ -87,6 +87,17 @@ type guiState struct {
 	// Maintains the state of manual filtering i.e. typing in a substring
 	// to filter on in the current panel.
 	Filter filterState
+
+	// MultiSelect stores selected items for batch operations
+	MultiSelect multiSelectState
+}
+
+// multiSelectState tracks selected items across all panels for batch operations
+type multiSelectState struct {
+	Containers map[string]bool // container ID -> selected
+	Images     map[string]bool // image ID -> selected
+	Volumes    map[string]bool // volume name -> selected
+	Networks   map[string]bool // network name -> selected
 }
 
 type filterState struct {
@@ -137,6 +148,12 @@ func NewGui(log *logrus.Entry, dockerCommand *commands.DockerCommand, oSCommand 
 
 		ShowExitedContainers: true,
 		ScreenMode:           getScreenMode(config),
+		MultiSelect: multiSelectState{
+			Containers: make(map[string]bool),
+			Images:     make(map[string]bool),
+			Volumes:    make(map[string]bool),
+			Networks:   make(map[string]bool),
+		},
 	}
 
 	gui := &Gui{
@@ -407,6 +424,12 @@ func (gui *Gui) quit(g *gocui.Gui, v *gocui.View) error {
 // this handler is executed when we press escape when there is only one view
 // on the stack.
 func (gui *Gui) escape() error {
+	// If there are multi-selections, clear them first
+	if gui.hasAnySelections() {
+		gui.clearAllSelections()
+		return gui.rerenderAllPanels()
+	}
+
 	if gui.State.Filter.active {
 		return gui.clearFilter()
 	}

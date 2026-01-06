@@ -61,7 +61,10 @@ func (gui *Gui) getImagesPanel() *panels.SideListPanel[*commands.Image] {
 
 			return a.ID < b.ID
 		},
-		GetTableCells: presentation.GetImageDisplayStrings,
+		GetTableCells: func(image *commands.Image) []string {
+			isSelected := gui.State.MultiSelect.Images[image.ID]
+			return presentation.GetImageDisplayStrings(image, isSelected)
+		},
 	}
 }
 

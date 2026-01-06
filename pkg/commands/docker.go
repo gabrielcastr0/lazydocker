@@ -16,9 +16,9 @@ import (
 	cliconfig "github.com/docker/cli/cli/config"
 	ddocker "github.com/docker/cli/cli/context/docker"
 	ctxstore "github.com/docker/cli/cli/context/store"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/imdario/mergo"
@@ -488,7 +488,7 @@ func (c *DockerCommand) NukeDocker() error {
 	}
 
 	// 4. Remove all networks (except default ones: bridge, host, none)
-	networks, err := c.Client.NetworkList(context.Background(), types.NetworkListOptions{})
+	networks, err := c.Client.NetworkList(context.Background(), network.ListOptions{})
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to list networks: %w", err))
 	} else {

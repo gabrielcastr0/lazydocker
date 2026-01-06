@@ -113,6 +113,11 @@ type TranslationSet struct {
 	FilterList                  string
 	OpenInBrowser               string
 	SortContainersByState       string
+	ToggleSelect                string
+	SelectAll                   string
+	DeselectAll                 string
+	DeleteSelected              string
+	ConfirmDeleteSelected       string
 
 	LogsTitle                 string
 	ConfigTitle               string
@@ -220,6 +225,11 @@ func englishSet() TranslationSet {
 		FilterList:                  "filter list",
 		OpenInBrowser:               "open in browser (first port is http)",
 		SortContainersByState:       "sort containers by state",
+		ToggleSelect:                "toggle select",
+		SelectAll:                   "select all",
+		DeselectAll:                 "deselect all",
+		DeleteSelected:              "delete selected",
+		ConfirmDeleteSelected:       "Are you sure you want to delete all selected items?",
 
 		GlobalTitle:               "Global",
 		MainTitle:                 "Main",

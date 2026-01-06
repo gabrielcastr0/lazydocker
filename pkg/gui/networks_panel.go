@@ -43,7 +43,10 @@ func (gui *Gui) getNetworksPanel() *panels.SideListPanel[*commands.Network] {
 		Sort: func(a *commands.Network, b *commands.Network) bool {
 			return a.Name < b.Name
 		},
-		GetTableCells: presentation.GetNetworkDisplayStrings,
+		GetTableCells: func(network *commands.Network) []string {
+			isSelected := gui.State.MultiSelect.Networks[network.Name]
+			return presentation.GetNetworkDisplayStrings(network, isSelected)
+		},
 	}
 }
 

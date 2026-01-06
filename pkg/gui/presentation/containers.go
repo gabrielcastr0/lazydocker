@@ -14,8 +14,9 @@ import (
 	"github.com/samber/lo"
 )
 
-func GetContainerDisplayStrings(guiConfig *config.GuiConfig, container *commands.Container) []string {
+func GetContainerDisplayStrings(guiConfig *config.GuiConfig, container *commands.Container, isSelected bool) []string {
 	return []string{
+		getSelectionMarker(isSelected),
 		getContainerDisplayStatus(guiConfig, container),
 		getContainerDisplaySubstatus(guiConfig, container),
 		container.Name,
@@ -23,6 +24,13 @@ func GetContainerDisplayStrings(guiConfig *config.GuiConfig, container *commands
 		utils.ColoredString(displayPorts(container), color.FgYellow),
 		utils.ColoredString(displayContainerImage(container), color.FgMagenta),
 	}
+}
+
+func getSelectionMarker(isSelected bool) string {
+	if isSelected {
+		return utils.ColoredString("[x]", color.FgGreen)
+	}
+	return "[ ]"
 }
 
 func displayContainerImage(container *commands.Container) string {
